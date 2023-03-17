@@ -1,0 +1,34 @@
+{
+  "12345": {
+    "WARFRAME": {
+      "basic": [
+        "SORTIE",
+        "STEEL_PATH_HONOR",
+        "ALERT",
+        "CETUS"
+      ],
+      "advanced": {
+        "FISSURE": [
+          "EXCAVATION",
+          "SURVIVAL"
+        ],
+        "BOUNTIES": [
+          "endo",
+          "aya"
+        ],
+        "INVASIONS": [
+          "mass",
+          "forma"
+        ]
+      }
+    }
+  },
+  "67890": {
+    "WARFRAME": {
+      "basic": [
+      ],
+      "advanced": {
+      }
+    }
+  }
+}

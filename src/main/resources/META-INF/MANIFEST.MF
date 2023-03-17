@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Main-Class: mahss.io.discord.bot.Main
+Class-Path: JDA-5.0.0-alpha.22.jar jackson-datatype-jsr310-2.13.4.jar ja
+ ckson-annotations-2.13.4.jar okhttp-4.9.3.jar opus-java-api-1.1.1.jar c
+ ommons-collections4-4.4.jar okio-2.8.0.jar nv-websocket-client-2.14.jar
+  annotations-13.0.jar jna-4.4.0.jar jackson-databind-2.13.4.jar opus-ja
+ va-natives-1.1.1.jar kotlin-stdlib-1.4.10.jar opus-java-1.1.1.jar kotli
+ n-stdlib-common-1.4.0.jar trove4j-3.0.3.jar slf4j-api-1.7.36.jar jackso
+ n-core-2.13.4.jar
+
