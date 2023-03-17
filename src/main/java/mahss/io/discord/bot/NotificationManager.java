@@ -40,10 +40,7 @@ public class NotificationManager {
             if (!notificationsContext.stream().anyMatch(c -> c.id().equals(notification.getId()))) {
                 subscriptionContext.keySet().stream()
                         //TODO: FIX ME
-                        .filter(userId -> {
-                            List<String> simpleSubs = ((ArrayList) subscriptionContext.get(userId).get(notification.getType().toUpperCase(Locale.ROOT)).get("basic"));
-                            return simpleSubs.contains(notification.getSubType().toString());
-                        })
+                        .filter(userId -> notification.getRecipients().contains(userId))
                         .forEach(userId -> {
                             sendEmbed(getUserById(userId).get(), notification);
                             recipientsList.add(userId);
@@ -52,7 +49,7 @@ public class NotificationManager {
             } else {
                 subscriptionContext.keySet().stream()
                         //TODO: FIX ME
-                        .filter(userId -> !context.get().recipients().contains(userId) && ((ArrayList) subscriptionContext.get(userId).get(notification.getType().toUpperCase(Locale.ROOT)).get("basic")).contains(notification.getSubType().toString()))
+                        .filter(userId -> !context.get().recipients().contains(userId) && notification.getRecipients().contains(userId))
                         .forEach(userId -> {
                             sendEmbed(getUserById(userId).get(), notification);
                             recipientsList.add(userId);
@@ -64,12 +61,6 @@ public class NotificationManager {
 
     public void addNotification(final Notification notificationContent) {
         notifications.push(notificationContent);
-    }
-
-
-    private boolean checkUserSubscriptions(String userId) {
-//        subscriptionContext.get(userId).get(notificationContent.getType().toLowerCase()).contains(notificationContent.getSubType().toString())
-        return false;
     }
 
     private Optional<User> getUserById(final String userId) {

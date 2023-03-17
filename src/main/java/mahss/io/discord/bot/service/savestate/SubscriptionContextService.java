@@ -14,8 +14,11 @@ import java.util.Map;
 public class SubscriptionContextService {
     private static File file;
 
+    private Map<String, Map<String, Map<String, Collection>>> data;
+
     public SubscriptionContextService(final String path) {
         this.file = Paths.get(path).toFile();
+        this.data = new HashMap<>();
         if (!file.exists()) {
             try {
                 file.createNewFile();
@@ -25,6 +28,10 @@ public class SubscriptionContextService {
         }
     }
 
+    public Map<String, Map<String, Map<String, Collection>>> getData() {
+        return data;
+    }
+
     public Map<String, Map<String, Map<String, Collection>>> readSubscriptionContext() {
         Map<String, Map<String, Map<String, Collection>>> data = null;
         try {
@@ -32,6 +39,7 @@ public class SubscriptionContextService {
             ObjectMapper mapper = new ObjectMapper();
 
             data = mapper.readValue(file, Map.class);
+            this.data = data;
 
         } catch (MismatchedInputException e) {
             return new HashMap<>();

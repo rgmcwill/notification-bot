@@ -3,13 +3,16 @@ package mahss.io.discord.bot.model;
 import mahss.io.discord.bot.factory.notification.NotificationContentFactory;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Notification {
     private String message;
     private String type;
-    private NotificationContentFactory.SubType subType;
+    private NotificationContentFactory.NotType subType;
     private String id;
     private LocalDateTime expiry;
+    private List<String> recipients;
 
     public String getMessage() {
         return message;
@@ -19,7 +22,7 @@ public class Notification {
         return type;
     }
 
-    public NotificationContentFactory.SubType getSubType() {
+    public NotificationContentFactory.NotType getSubType() {
         return subType;
     }
 
@@ -31,8 +34,16 @@ public class Notification {
         return expiry;
     }
 
-    public void setSubType(NotificationContentFactory.SubType subType) {
+    public List<String> getRecipients() {
+        return recipients;
+    }
+
+    public void setSubType(NotificationContentFactory.NotType subType) {
         this.subType = subType;
+    }
+
+    public void addRecipient(String recipient) {
+        this.recipients.add(recipient);
     }
 
     private Notification(NotificationContentBuilder notificationContentBuilder) {
@@ -41,16 +52,19 @@ public class Notification {
         this.subType = notificationContentBuilder.subType;
         this.id = notificationContentBuilder.id;
         this.expiry = notificationContentBuilder.expiry;
+        this.recipients = notificationContentBuilder.recipients;
     }
 
     public static class NotificationContentBuilder {
         private String message;
         private String type;
-        private NotificationContentFactory.SubType subType;
+        private NotificationContentFactory.NotType subType;
         private String id;
         private LocalDateTime expiry;
+        private List<String> recipients;
 
         public NotificationContentBuilder() {
+            this.recipients = new ArrayList<>();
         }
 
         public NotificationContentBuilder setMessage(final String message) {
@@ -63,7 +77,7 @@ public class Notification {
             return this;
         }
 
-        public NotificationContentBuilder setSubType(final NotificationContentFactory.SubType subType) {
+        public NotificationContentBuilder setSubType(final NotificationContentFactory.NotType subType) {
             this.subType = subType;
             return this;
         }
@@ -75,6 +89,11 @@ public class Notification {
 
         public NotificationContentBuilder setExpiry(final LocalDateTime expiry) {
             this.expiry = expiry;
+            return this;
+        }
+
+        public NotificationContentBuilder setRecipients(final List<String> recipients) {
+            this.recipients = recipients;
             return this;
         }
 

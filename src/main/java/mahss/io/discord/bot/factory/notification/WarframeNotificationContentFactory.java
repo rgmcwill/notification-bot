@@ -8,10 +8,12 @@ import mahss.io.discord.bot.model.warframe.Fissure;
 import mahss.io.discord.bot.model.warframe.Mission;
 import mahss.io.discord.bot.model.warframe.Syndicate;
 import mahss.io.discord.bot.service.WarframeDataService;
+import mahss.io.discord.bot.service.savestate.SubscriptionContextService;
 import mahss.io.discord.bot.util.ParsingUtils;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class WarframeNotificationContentFactory implements NotificationContentFactory {
     private static final String SERVICE_NAME = "Warframe";
@@ -59,13 +61,16 @@ public class WarframeNotificationContentFactory implements NotificationContentFa
     private static final String MISSION_STRING_2 = "> %s - %s\n";
 
     private WarframeDataService warframeDataService;
+    private SubscriptionContextService subscriptionContextService;
 
-    public WarframeNotificationContentFactory(WarframeDataService warframeDataService, Map<String, List<Object>> requests) {
+    public WarframeNotificationContentFactory(WarframeDataService warframeDataService, SubscriptionContextService subscriptionContextService) {
         this.warframeDataService = warframeDataService;
+        this.subscriptionContextService = subscriptionContextService;
     }
 
     @Override
     public List<Notification> getNotificationsContent() {
+        subscriptionContextService.readSubscriptionContext();
         List<Notification> notificationsContent = new ArrayList<>();
         Notification sortieNotification = sortieToNotificationContent();
         if (sortieNotification != null) {
@@ -87,13 +92,19 @@ public class WarframeNotificationContentFactory implements NotificationContentFa
         notificationsContent.addAll(alertToNotificationContent());
 
         Map<NotificationData, Fissure> allFissures = getFissureMissions();
-        notificationsContent.addAll(fissureToNotificationContent(allFissures, Mission.Type.SURVIVAL));
+        getAllTargetRewards(NotType.FISSURES).stream().forEach(missionType -> {
+            notificationsContent.addAll(fissureToNotificationContent(allFissures, Mission.Type.valueOf(missionType)));
+        });
 
         Map<NotificationData, Mission[]> allInvasions = getInvasions();
-        notificationsContent.addAll(getInvasionsWithReward(allInvasions, "mass"));
+        getAllTargetRewards(NotType.INVASIONS).stream().forEach(targetReward -> {
+            notificationsContent.addAll(getInvasionsWithReward(allInvasions, targetReward));
+        });
 
         List<Bounty> bounties = getBounties();
-        notificationsContent.addAll(getBountyNotificationWithReward(bounties, "endo"));
+        getAllTargetRewards(NotType.BOUNTIES).stream().forEach(targetReward -> {
+            notificationsContent.addAll(getBountyNotificationWithReward(bounties, targetReward));
+        });
 
         return notificationsContent;
     }
@@ -114,9 +125,10 @@ public class WarframeNotificationContentFactory implements NotificationContentFa
                                 rewards
                         ))
                         .setType(SERVICE_NAME)
-                        .setSubType(SubType.BOUNTIES)
+                        .setSubType(NotType.BOUNTIES)
                         .setId(bounty.getId())
                         .setExpiry(bounty.getExpiry())
+                        .setRecipients(getRecipients(NotType.BOUNTIES, targetReward))
                         .build()
                 );
             }
@@ -147,9 +159,10 @@ public class WarframeNotificationContentFactory implements NotificationContentFa
                                 missions[1].getFaction(),
                                 rewards))
                         .setType(SERVICE_NAME)
-                        .setSubType(SubType.INVASIONS)
+                        .setSubType(NotType.INVASIONS)
                         .setId(notificationData.getId())
                         .setExpiry(notificationData.getExpire())
+                        .setRecipients(getRecipients(NotType.INVASIONS, targetReward))
                         .build()
                 );
             }
@@ -170,9 +183,10 @@ public class WarframeNotificationContentFactory implements NotificationContentFa
                 return new Notification.NotificationContentBuilder()
                         .setMessage(CETUS_NIGHT_MESSAGE)
                         .setType(SERVICE_NAME)
-                        .setSubType(SubType.CETUS)
+                        .setSubType(NotType.CETUS)
                         .setId(id)
                         .setExpiry(expiry)
+                        .setRecipients(getRecipients(NotType.CETUS))
                         .build();
             }
         }
@@ -198,9 +212,10 @@ public class WarframeNotificationContentFactory implements NotificationContentFa
                                 )
                         ))
                         .setType(SERVICE_NAME)
-                        .setSubType(SubType.ALERT)
+                        .setSubType(NotType.ALERT)
                         .setId(id)
                         .setExpiry(expiry)
+                        .setRecipients(getRecipients(NotType.ALERT))
                         .build()
                 );
             });
@@ -241,9 +256,10 @@ public class WarframeNotificationContentFactory implements NotificationContentFa
             return new Notification.NotificationContentBuilder()
                     .setMessage(message)
                     .setType(SERVICE_NAME)
-                    .setSubType(SubType.SORTIE)
+                    .setSubType(NotType.SORTIE)
                     .setId(id)
                     .setExpiry(expiry)
+                    .setRecipients(getRecipients(NotType.SORTIE))
                     .build();
         }
         return null;
@@ -270,9 +286,10 @@ public class WarframeNotificationContentFactory implements NotificationContentFa
                                 )
                         ))
                         .setType(SERVICE_NAME)
-                        .setSubType(SubType.FISSURES)
+                        .setSubType(NotType.FISSURES)
                         .setId(notificationData.getId())
                         .setExpiry(notificationData.getExpire())
+                        .setRecipients(getRecipients(NotType.FISSURES, fissure.getType()))
                         .build()
                 );
             }
@@ -294,9 +311,10 @@ public class WarframeNotificationContentFactory implements NotificationContentFa
                             reward.get("cost").asText()
                     ))
                     .setType(SERVICE_NAME)
-                    .setSubType(SubType.STEEL_PATH_HONOR)
+                    .setSubType(NotType.STEEL_PATH_HONOR)
                     .setId(id)
                     .setExpiry(expiry)
+                    .setRecipients(getRecipients(NotType.STEEL_PATH_HONOR))
                     .build();
         }
         return null;
@@ -320,7 +338,7 @@ public class WarframeNotificationContentFactory implements NotificationContentFa
                                 inventoryMessage
                         ))
                         .setType(SERVICE_NAME)
-                        .setSubType(SubType.VOID_TRADER)
+                        .setSubType(NotType.VOID_TRADER)
                         .setId(id)
                         .setExpiry(expiry)
                         .build();
@@ -333,7 +351,7 @@ public class WarframeNotificationContentFactory implements NotificationContentFa
         return new Notification.NotificationContentBuilder()
                 .setMessage("Error")
                 .setType(SERVICE_NAME)
-                .setSubType(SubType.UNKNOWN)
+                .setSubType(NotType.UNKNOWN)
                 .setId(UUID.randomUUID().toString())
                 .build();
     }
@@ -470,7 +488,44 @@ public class WarframeNotificationContentFactory implements NotificationContentFa
         return allInvasions;
     }
 
-    enum SubType implements NotificationContentFactory.SubType {
+    private List<String> getRecipients(final NotType notType) {
+        List<String> recipients = new ArrayList<>();
+        subscriptionContextService.getData().forEach((userId, services) -> {
+            List<String> basicWarframeSubs = (ArrayList) services.get("WARFRAME").get("basic");
+            if (basicWarframeSubs.stream().map(s -> NotType.valueOf(s)).collect(Collectors.toList()).contains(notType)) {
+                recipients.add(userId);
+            }
+        });
+        return recipients;
+    }
+
+    private List<String> getRecipients(final NotType notType, final Object subType) {
+        List<String> recipients = new ArrayList<>();
+        subscriptionContextService.getData().forEach((userId, services) -> {
+            Map<String, List<String>> advancedWarframeSubs = (HashMap) services.get("WARFRAME").get("advanced");
+            advancedWarframeSubs.forEach((notTypeString, subTypes) -> {
+                if (NotType.valueOf(notTypeString).equals(notType) && subTypes.contains(subType.toString())) {
+                    recipients.add(userId);
+                }
+            });
+        });
+        return recipients;
+    }
+
+    private List<String> getAllTargetRewards(final NotType notType) {
+        List<String> allTargetRewards = new ArrayList<>();
+        subscriptionContextService.getData().forEach((userId, services) -> {
+            Map<String, List<String>> advancedWarframeSubs = (HashMap) services.get("WARFRAME").get("advanced");
+            advancedWarframeSubs.forEach((notTypeString, subTypes) -> {
+                if (NotType.valueOf(notTypeString).equals(notType)) {
+                    allTargetRewards.addAll(subTypes);
+                }
+            });
+        });
+        return allTargetRewards;
+    }
+
+    enum NotType implements NotificationContentFactory.NotType {
         SORTIE(null),
         ALERT(null),
         CETUS(null),
@@ -500,7 +555,7 @@ public class WarframeNotificationContentFactory implements NotificationContentFa
 
         List<Object> subTypes;
 
-        SubType(List<Object> subTypes) {
+        NotType(List<Object> subTypes) {
             this.subTypes = subTypes;
         }
 

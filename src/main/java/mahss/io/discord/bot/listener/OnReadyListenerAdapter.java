@@ -11,7 +11,6 @@ import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -29,11 +28,11 @@ public class OnReadyListenerAdapter extends ListenerAdapter {
     public void onReady(ReadyEvent e) {
         System.out.println(BOT_RUNNING);
 
-        List<NotificationContentFactory> notificationFactories = new ArrayList<>();
-        notificationFactories.add(new WarframeNotificationContentFactory(new WarframeDataService(WARFRAME_API_URL), new HashMap<>()));
-
         NotificationContextService notificationContextService = new NotificationContextServiceImpl(NOTIFICATION_CONTEXT_FILE);
         SubscriptionContextService subscriptionContextService = new SubscriptionContextService(SUBSCRIPTION_CONTEXT_FILE);
+
+        List<NotificationContentFactory> notificationFactories = new ArrayList<>();
+        notificationFactories.add(new WarframeNotificationContentFactory(new WarframeDataService(WARFRAME_API_URL), subscriptionContextService));
 
         NotificationManager notificationManager = new NotificationManager(e.getJDA(), notificationContextService, subscriptionContextService);
 

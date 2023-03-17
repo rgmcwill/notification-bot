@@ -7,6 +7,6 @@ import java.util.List;
 public interface NotificationContentFactory {
     List<Notification> getNotificationsContent();
 
-    interface SubType {
+    interface NotType {
     }
 }
